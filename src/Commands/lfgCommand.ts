@@ -1,39 +1,61 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
-import { MessageEmbed } from "discord.js";
+import {
+  MessageActionRow,
+  MessageButton,
+  MessageEmbed,
+  MessageSelectMenu,
+} from "discord.js";
 import { Command } from "../ineterfaces/Command";
 import { getCamperData } from "../modules/getCamperData";
 import { updateCamperData } from "../modules/updateCamperData";
 
 export const lfgCommand: Command = {
   data: new SlashCommandBuilder()
-    .setName("100")
-    .setDescription("create new party")
+    .setName("파티생성")
+    .setDescription("새로운 파티 혹은 공격대를 모집합니다")
     .addStringOption((option) =>
-      option.setName("message").setDescription("test").setRequired(true)
+      option.setName("제목").setDescription("파티 제목").setRequired(true)
     ),
   run: async (interaction) => {
-    await interaction.deferReply();
-    const { user } = interaction;
-    const text = interaction.options.getString("message", true);
-
-    const targetCamper = await getCamperData(user.id);
-    const updateCamper = await updateCamperData(targetCamper);
-
-    const messageEmbed = new MessageEmbed();
-    messageEmbed.setTitle("test");
-    messageEmbed.setDescription(text);
-    messageEmbed.setAuthor({
-      name: user.tag,
-      iconURL: user.displayAvatarURL(),
-    });
-    messageEmbed.addField("Round", updateCamper.round.toString(), true);
-    messageEmbed.addField("Day", updateCamper.day.toString(), true);
-    messageEmbed.setFooter({
-      text:
-        "Day completed: " +
-        new Date(updateCamper.timestamp).toLocaleDateString(),
+    await interaction.deferReply({
+      ephemeral: true,
     });
 
-    await interaction.editReply({ embeds: [messageEmbed] });
+    const raid = new MessageActionRow().addComponents(
+      new MessageSelectMenu()
+        .setCustomId("raid")
+        .setPlaceholder("목표 군단장 선택")
+        .addOptions([
+          {
+            label: "발탄",
+            value: "first_option",
+          },
+          {
+            label: "비아키스",
+            value: "second_option",
+          },
+          {
+            label: "쿠크세이튼",
+            value: "third_option",
+          },
+          {
+            label: "아브렐슈드",
+            value: "fourth_option",
+          },
+        ])
+    );
+
+    const button = new MessageActionRow().addComponents(
+      new MessageButton()
+        .setCustomId("primary")
+        .setLabel("Primary")
+        .setStyle("PRIMARY")
+        .setEmoji("🍎")
+    );
+
+    await interaction.editReply({
+      content: "레이드를 선택해주세요",
+      components: [raid],
+    });
   },
 };
